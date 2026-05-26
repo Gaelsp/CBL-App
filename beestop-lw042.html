@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a5c35">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Bee Stop · LW042</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1a5c35;
+    --green-mid: #2d7a4a;
+    --green-light: #eaf4ee;
+    --green-pale: #f4faf6;
+    --amber: #d97706;
+    --amber-light: #fef3e2;
+    --red: #b91c1c;
+    --red-light: #fef2f2;
+    --text: #111810;
+    --text-2: #4a5240;
+    --text-3: #8a9280;
+    --border: #e0e8d8;
+    --card: #ffffff;
+    --bg: #f4faf6;
+    --radius: 16px;
+    --shadow: 0 2px 12px rgba(26,92,53,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 420px;
+    margin: 0 auto;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--green);
+    padding: 20px 20px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 140px; height: 140px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: 40px;
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 50%;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .stop-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .stop-name {
+    font-size: 22px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.1;
+  }
+  .stop-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.65);
+    margin-top: 4px;
+  }
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .live-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #4ade80;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+
+  /* weather strip */
+  .weather-strip {
+    display: flex;
+    gap: 16px;
+    margin-top: 2px;
+  }
+  .weather-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+  }
+  .weather-item span { font-size: 15px; }
+
+  /* ── NAV TABS ── */
+  .tabs {
+    display: flex;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .tab {
+    flex: 1;
+    padding: 13px 6px 11px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-3);
+    text-align: center;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    letter-spacing: 0.01em;
+  }
+  .tab .tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+  .tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+  /* ── PAGES ── */
+  .page { display: none; padding: 14px 14px 90px; animation: fadein 0.2s ease; }
+  .page.active { display: block; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity:1; transform:none; } }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .card-head {
+    padding: 14px 16px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── BUS ROWS ── */
+  .bus-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .bus-row:active { background: var(--green-pale); }
+  .bus-num {
+    min-width: 38px; height: 30px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .bus-info { flex: 1; min-width: 0; }
+  .bus-dest { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bus-via { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+  .bus-right { text-align: right; flex-shrink: 0; }
+  .bus-time { font-size: 15px; font-weight: 600; }
+  .t-now { color: var(--green); }
+  .t-soon { color: var(--text); }
+  .t-late { color: var(--red); }
+  .bus-delay { font-size: 10px; font-weight: 400; }
+  .cap-wrap { display: flex; align-items: center; gap: 5px; margin-top: 4px; justify-content: flex-end; }
+  .cap-bar { width: 48px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .cap-fill { height: 100%; border-radius: 2px; transition: width 0.6s; }
+  .cap-lbl { font-size: 10px; color: var(--text-3); }
+
+  /* ── REPORT BTN ── */
+  .btn-ghost {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    width: calc(100% - 32px);
+    margin: 4px 16px 14px;
+    padding: 11px;
+    background: var(--green-light);
+    border: none; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    color: var(--green);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn-ghost:active { background: #d0e8d8; transform: scale(0.98); }
+
+  /* ── STAT GRID ── */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 8px 14px 14px; }
+  .stat-box {
+    background: var(--green-pale);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .stat-num { font-family: 'DM Mono', monospace; font-size: 24px; font-weight: 500; color: var(--text); line-height: 1; }
+  .stat-unit { font-size: 13px; color: var(--text-3); }
+  .stat-lbl { font-size: 11px; color: var(--text-2); margin-top: 5px; }
+  .stat-icon { font-size: 18px; margin-bottom: 4px; }
+
+  /* ── BEE ROWS ── */
+  .bee-row {
+    display: flex; align-items: center; gap: 11px;
+    padding: 11px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .bee-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .bee-name { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; }
+  .bee-note { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+  .pill {
+    font-size: 10px; font-weight: 600;
+    padding: 3px 9px; border-radius: 20px;
+    letter-spacing: 0.02em;
+  }
+  .pill-green { background: var(--green-light); color: var(--green); }
+  .pill-amber { background: var(--amber-light); color: var(--amber); }
+  .pill-red   { background: var(--red-light); color: var(--red); }
+
+  /* log sighting */
+  .sighting-log { padding: 10px 16px 14px; border-top: 1px solid var(--border); }
+  .sighting-label { font-size: 11px; color: var(--text-3); margin-bottom: 8px; }
+  .sighting-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sighting-btn {
+    background: var(--green-pale); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 13px;
+    font-size: 12px; color: var(--text-2); cursor: pointer;
+    transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+  }
+  .sighting-btn:active, .sighting-btn.logged { background: var(--green-light); color: var(--green); border-color: var(--green); }
+
+  /* ── SUPPORT ── */
+  .support-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 8px 14px 14px; }
+  .sup-btn {
+    background: var(--green-pale); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 6px 10px;
+    text-align: center; cursor: pointer;
+    transition: background 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .sup-btn:active { background: var(--green-light); }
+  .sup-icon { font-size: 22px; display: block; margin-bottom: 5px; }
+  .sup-lbl { font-size: 10px; font-weight: 500; color: var(--text-2); }
+
+  /* alerts */
+  .alert {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 11px 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--text-2); line-height: 1.5;
+  }
+  .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* map placeholder */
+  .map-placeholder {
+    background: linear-gradient(135deg, #d4e8da 0%, #c2dcc8 100%);
+    height: 180px; border-radius: var(--radius);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    font-size: 13px; color: var(--text-2);
+    gap: 8px;
+  }
+  .map-pin { font-size: 36px; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 420px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
+    z-index: 20;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+    font-size: 10px; font-weight: 500;
+    color: var(--text-3); cursor: pointer;
+    padding: 4px 0;
+    transition: color 0.15s;
+  }
+  .nav-item .nav-icon { font-size: 22px; }
+  .nav-item.active { color: var(--green); }
+
+  /* ── CLOCK ── */
+  #clock { font-family: 'DM Mono', monospace; font-size: 13px; color: rgba(255,255,255,0.8); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--green); color: #fff;
+    padding: 10px 20px; border-radius: 20px;
+    font-size: 13px; font-weight: 500;
+    opacity: 0; transition: all 0.3s;
+    pointer-events: none; z-index: 99;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="stop-label">BEE STOP · LW042</div>
+      <div class="stop-name">Ladywood<br>Middleway</div>
+      <div class="stop-sub">📍 Ladywood, Birmingham B16</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+      <div class="live-badge"><div class="live-dot"></div> Live</div>
+      <div id="clock"></div>
+    </div>
+  </div>
+  <div class="weather-strip">
+    <div class="weather-item"><span>🌤</span> 19°C</div>
+    <div class="weather-item"><span>💨</span> 12 km/h</div>
+    <div class="weather-item"><span>🌧</span> 20% rain</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('arrivals',this)">
+    <span class="tab-icon">🚌</span>Arrivals
+  </div>
+  <div class="tab" onclick="switchTab('map',this)">
+    <span class="tab-icon">🗺</span>Map
+  </div>
+  <div class="tab" onclick="switchTab('beestop',this)">
+    <span class="tab-icon">🌿</span>Bee Stop
+  </div>
+  <div class="tab" onclick="switchTab('support',this)">
+    <span class="tab-icon">♿</span>Support
+  </div>
+</div>
+
+<!-- ARRIVALS PAGE -->
+<div class="page active" id="page-arrivals">
+
+  <div class="card">
+    <div class="card-head">Next departures</div>
+
+    <div class="bus-row">
+      <div class="bus-num" style="background:#1a5c35">45</div>
+      <div class="bus-info">
+        <div class="bus-dest">City Centre</div>
+        <div class="bus-via">via Broad St · Centenary Sq</div>
+      </div>
+      <div class="bus-right">
+        <div class="bus-time t-now" id="t1">2 min</div>
+        <div class="cap-wrap">
+          <div class="cap-bar"><div class="cap-fill" style="width:55%;background:#1a9e75"></div></div>
+          <div class="cap-lbl">Moderate</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bus-row">
+      <div class="bus-num" style="background:#185fa5">X8</div>
+      <div class="bus-info">
+        <div class="bus-dest">Wolverhampton</div>
+        <div class="bus-via">Express · Smethwick</div>
+      </div>
+      <div class="bus-right">
+        <div class="bus-time t-soon" id="t2">9 min</div>
+        <div class="cap-wrap">
+          <div class="cap-bar"><div class="cap-fill" style="width:18%;background:#78b84a"></div></div>
+          <div class="cap-lbl">Quiet</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bus-row">
+      <div class="bus-num" style="background:#1a5c35">45</div>
+      <div class="bus-info">
+        <div class="bus-dest">City Centre</div>
+        <div class="bus-via">via Broad St · Centenary Sq</div>
+      </div>
+      <div class="bus-right">
+        <div class="bus-time t-late" id="t3">17 min <span class="bus-delay">(+4)</span></div>
+        <div class="cap-wrap">
+          <div class="cap-bar"><div class="cap-fill" style="width:88%;background:#c87020"></div></div>
+          <div class="cap-lbl">Busy</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bus-row">
+      <div class="bus-num" style="background:#7c3aed">22</div>
+      <div class="bus-info">
+        <div class="bus-dest">Outer Circle</div>
+        <div class="bus-via">via Hagley Rd · Harborne</div>
+      </div>
+      <div class="bus-right">
+        <div class="bus-time t-soon" id="t4">24 min</div>
+        <div class="cap-wrap">
+          <div class="cap-bar"><div class="cap-fill" style="width:35%;background:#1a9e75"></div></div>
+          <div class="cap-lbl">Quiet</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-ghost" onclick="showToast('👥 Thanks for reporting!')">
+      👥 Report bus capacity
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-head">Service alerts</div>
+    <div class="alert">
+      <div class="alert-icon">⚠️</div>
+      <div>Route 45 running approx. <strong>4 mins late</strong> due to congestion near Paradise Circus. TfWM apologises for the delay.</div>
+    </div>
+    <div class="alert">
+      <div class="alert-icon">ℹ️</div>
+      <div>Route X8 operating on diversion via Smethwick High St until <strong>20 June</strong>. Journey times unaffected.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MAP PAGE -->
+<div class="page" id="page-map">
+  <div class="map-placeholder">
+    <div class="map-pin">📍</div>
+    <div><strong>Stop LW042</strong> — Ladywood Middleway</div>
+    <div style="font-size:12px;color:#6a8070">Interactive map · coming in full release</div>
+  </div>
+  <div class="card">
+    <div class="card-head">Nearby stops</div>
+    <div class="bus-row">
+      <div style="font-size:22px">🚌</div>
+      <div class="bus-info">
+        <div class="bus-dest">Spring Hill (LW038)</div>
+        <div class="bus-via">3 min walk · Routes 87, 88</div>
+      </div>
+      <div class="bus-time t-soon" style="font-size:13px">180m</div>
+    </div>
+    <div class="bus-row">
+      <div style="font-size:22px">🚌</div>
+      <div class="bus-info">
+        <div class="bus-dest">Icknield Port Rd (LW045)</div>
+        <div class="bus-via">5 min walk · Routes 45, 22</div>
+      </div>
+      <div class="bus-time t-soon" style="font-size:13px">320m</div>
+    </div>
+  </div>
+</div>
+
+<!-- BEE STOP PAGE -->
+<div class="page" id="page-beestop">
+
+  <div class="card">
+    <div class="card-head">This stop today</div>
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="stat-icon">🌧</div>
+        <div><span class="stat-num">14</span><span class="stat-unit"> L</span></div>
+        <div class="stat-lbl">Rainwater captured</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon">🐝</div>
+        <div><span class="stat-num">3</span></div>
+        <div class="stat-lbl">Pollinators logged</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon">🌡</div>
+        <div><span class="stat-num">−2</span><span class="stat-unit">°C</span></div>
+        <div class="stat-lbl">Cooling vs street</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon">🌱</div>
+        <div><span class="stat-num">3</span></div>
+        <div class="stat-lbl">Species blooming</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">Roof planting</div>
+    <div class="bee-row">
+      <div class="bee-dot" style="background:#639922"></div>
+      <div>
+        <div class="bee-name">Thyme</div>
+        <div class="bee-note">Blooming now · attracts honeybees</div>
+      </div>
+      <span class="pill pill-green">In flower</span>
+    </div>
+    <div class="bee-row">
+      <div class="bee-dot" style="background:#d97706"></div>
+      <div>
+        <div class="bee-name">Lavender</div>
+        <div class="bee-note">Peak Jul – Aug</div>
+      </div>
+      <span class="pill pill-amber">Coming soon</span>
+    </div>
+    <div class="bee-row">
+      <div class="bee-dot" style="background:#1D9E75"></div>
+      <div>
+        <div class="bee-name">Sedum</div>
+        <div class="bee-note">Year-round · low maintenance</div>
+      </div>
+      <span class="pill pill-green">In flower</span>
+    </div>
+    <div class="bee-row">
+      <div class="bee-dot" style="background:#b91c1c"></div>
+      <div>
+        <div class="bee-name">Wildflower mix</div>
+        <div class="bee-note">Planted Oct · growing</div>
+      </div>
+      <span class="pill pill-red">Dormant</span>
+    </div>
+    <div class="sighting-log">
+      <div class="sighting-label">Log a pollinator sighting</div>
+      <div class="sighting-btns">
+        <button class="sighting-btn" onclick="logSighting(this,'🐝 Honeybee')">🐝 Honeybee</button>
+        <button class="sighting-btn" onclick="logSighting(this,'🦋 Butterfly')">🦋 Butterfly</button>
+        <button class="sighting-btn" onclick="logSighting(this,'🐛 Bumblebee')">🐛 Bumblebee</button>
+        <button class="sighting-btn" onclick="logSighting(this,'🪲 Other')">🪲 Other</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">About Bee Stops</div>
+    <div class="alert">
+      <div class="alert-icon">🌍</div>
+      <div>Inspired by <strong>Utrecht, Netherlands</strong>. Green roofs absorb 50–80% of annual rainfall, reduce the Urban Heat Island effect, and provide urban corridors for pollinators. Installation funded at <strong>€0 to the public</strong> via advertising revenue.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SUPPORT PAGE -->
+<div class="page" id="page-support">
+  <div class="card">
+    <div class="card-head">Accessibility</div>
+    <div class="support-grid">
+      <button class="sup-btn" onclick="toggleSpeech()">
+        <span class="sup-icon">🔊</span>
+        <span class="sup-lbl">Read aloud</span>
+      </button>
+      <button class="sup-btn" onclick="showToast('🔡 Large text on')">
+        <span class="sup-icon">🔡</span>
+        <span class="sup-lbl">Large text</span>
+      </button>
+      <button class="sup-btn" onclick="showToast('♿ Wheelchair info shown')">
+        <span class="sup-icon">♿</span>
+        <span class="sup-lbl">Mobility info</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">Fare support</div>
+    <div class="bus-row" style="cursor:pointer" onclick="showToast('🎫 Opening Swift Card info…')">
+      <div style="font-size:22px">🎫</div>
+      <div class="bus-info">
+        <div class="bus-dest">Swift Card — discounted travel</div>
+        <div class="bus-via">Low-income & concessionary passes</div>
+      </div>
+      <div style="color:var(--text-3);font-size:18px">›</div>
+    </div>
+    <div class="bus-row" style="cursor:pointer" onclick="showToast('🎓 Opening Student pass info…')">
+      <div style="font-size:22px">🎓</div>
+      <div class="bus-info">
+        <div class="bus-dest">Student & young person pass</div>
+        <div class="bus-via">Under 18 · 16–25 railcard</div>
+      </div>
+      <div style="color:var(--text-3);font-size:18px">›</div>
+    </div>
+    <div class="bus-row" style="cursor:pointer" onclick="showToast('👴 Opening concessionary pass info…')">
+      <div style="font-size:22px">👴</div>
+      <div class="bus-info">
+        <div class="bus-dest">Over 60s free bus pass</div>
+        <div class="bus-via">Apply via Birmingham City Council</div>
+      </div>
+      <div style="color:var(--text-3);font-size:18px">›</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">Report an issue</div>
+    <div class="bus-row" style="cursor:pointer" onclick="showToast('📋 Opening FixMyStreet…')">
+      <div style="font-size:22px">🗑</div>
+      <div class="bus-info">
+        <div class="bus-dest">Report rubbish / bin full</div>
+        <div class="bus-via">Via FixMyStreet</div>
+      </div>
+      <div style="color:var(--text-3);font-size:18px">›</div>
+    </div>
+    <div class="bus-row" style="cursor:pointer" onclick="showToast('💡 Opening lighting report…')">
+      <div style="font-size:22px">💡</div>
+      <div class="bus-info">
+        <div class="bus-dest">Report broken lighting</div>
+        <div class="bus-via">Birmingham City Council</div>
+      </div>
+      <div style="color:var(--text-3);font-size:18px">›</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">About this stop</div>
+    <div class="alert">
+      <div class="alert-icon">📡</div>
+      <div>Data via <strong>TfWM open API</strong> (GTFS-RT). Stop ID: <strong>LW042</strong>. This is a proof-of-concept for the Ladywood CBL project, Group 1, 2025–26.</div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active" id="nav-arrivals" onclick="switchTab('arrivals',this)">
+    <span class="nav-icon">🚌</span>Arrivals
+  </div>
+  <div class="nav-item" id="nav-map" onclick="switchTab('map',this)">
+    <span class="nav-icon">🗺</span>Map
+  </div>
+  <div class="nav-item" id="nav-beestop" onclick="switchTab('beestop',this)">
+    <span class="nav-icon">🌿</span>Bee Stop
+  </div>
+  <div class="nav-item" id="nav-support" onclick="switchTab('support',this)">
+    <span class="nav-icon">♿</span>Support
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── CLOCK ──
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.getHours().toString().padStart(2,'0') + ':' +
+      now.getMinutes().toString().padStart(2,'0');
+  }
+  tick(); setInterval(tick, 1000);
+
+  // ── COUNTDOWN ──
+  const times = [2,9,17,24];
+  function countdown() {
+    times[0] = Math.max(0, times[0] - 1/60);
+    times[1] = Math.max(0, times[1] - 1/60);
+    times[2] = Math.max(0, times[2] - 1/60);
+    times[3] = Math.max(0, times[3] - 1/60);
+    const ids = ['t1','t2','t3','t4'];
+    const cls = ['t-now','t-soon','t-soon','t-soon'];
+    const extras = ['','','<span class="bus-delay">(+4)</span>',''];
+    ids.forEach((id,i) => {
+      const v = times[i];
+      const el = document.getElementById(id);
+      if(!el) return;
+      if(v < 1) {
+        el.innerHTML = 'Due'; el.className = 'bus-time t-now';
+      } else {
+        el.innerHTML = Math.ceil(v) + ' min ' + (extras[i]||'');
+        el.className = 'bus-time ' + (i===2?'t-late':v<3?'t-now':'t-soon');
+      }
+    });
+  }
+  setInterval(countdown, 1000);
+
+  // ── TAB SWITCH ──
+  function switchTab(name, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-'+name).classList.add('active');
+    if(el) el.classList.add('active');
+    document.getElementById('nav-'+name)?.classList.add('active');
+    window.scrollTo(0,0);
+  }
+
+  // ── TOAST ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ── SIGHTING ──
+  function logSighting(btn, name) {
+    btn.classList.add('logged');
+    showToast('✅ ' + name + ' logged — thanks!');
+    setTimeout(() => btn.classList.remove('logged'), 3000);
+  }
+
+  // ── READ ALOUD ──
+  function toggleSpeech() {
+    if('speechSynthesis' in window) {
+      const msg = new SpeechSynthesisUtterance(
+        'Bee Stop LW042, Ladywood Middleway. Next bus: Route 45 to City Centre, due in 2 minutes, moderate capacity. Route X8 to Wolverhampton in 9 minutes, quiet.'
+      );
+      msg.rate = 0.9;
+      window.speechSynthesis.speak(msg);
+      showToast('🔊 Reading arrivals aloud…');
+    } else {
+      showToast('⚠️ Speech not supported on this device');
+    }
+  }
+</script>
+</body>
+</html>
